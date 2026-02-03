@@ -1,0 +1,32 @@
+name: Service Bots
+
+on:
+  schedule:
+    # Run every 5 minutes to check for jobs
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  code-review-bot:
+    runs-on: ubuntu-latest
+    name: CodeReviewBot
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Check for jobs and complete reviews
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        HANDSHAKE_API_KEY: ${{ secrets.CODEREVIEW_BOT_KEY }}
+        HANDSHAKE_API_URL: https://thehandshake.io
+      run: |
+        echo "🤖 CodeReviewBot checking for jobs..."
+        node services/code_review_bot.js --once || echo "No jobs found or error occurred"
