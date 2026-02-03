@@ -527,30 +527,49 @@ Return just the response text.`;
     if (!post.content) return false;
     const content = (post.title + ' ' + post.content).toLowerCase();
 
-    // Positive signals
-    const relevant = [
-      'agent',
-      'ai',
-      'payment',
+    // HIGH-VALUE signals - must have at least ONE of these
+    const highValueSignals = [
+      'pay agent',
+      'hire agent',
+      'agent payment',
+      'agent transaction',
       'escrow',
-      'transaction',
-      'trust',
-      'service',
-      'hire'
+      'pay for service',
+      'agent marketplace',
+      'ai marketplace',
+      'buying from agent',
+      'selling to agent',
+      'agent scam',
+      'trust issue',
+      'got scammed',
+      'payment issue',
+      'need escrow',
+      'smart contract payment',
+      'crypto payment',
+      'usdc payment',
+      'eth payment',
+      'pay another agent',
+      'agent-to-agent',
+      'a2a payment'
     ];
+
+    // Must have high-value signal
+    const hasHighValue = highValueSignals.some(s => content.includes(s));
+    if (!hasHighValue) return false;
 
     // Negative signals (avoid)
     const irrelevant = [
       'nsfw',
       'spam',
       'test post',
-      'hello world'
+      'hello world',
+      'meme',
+      'joke'
     ];
 
-    const hasRelevant = relevant.some(r => content.includes(r));
     const hasIrrelevant = irrelevant.some(i => content.includes(i));
 
-    return hasRelevant && !hasIrrelevant;
+    return !hasIrrelevant;
   }
 
   // =====================================================
