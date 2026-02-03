@@ -64,7 +64,11 @@ class StrategistAgent extends AgentCore {
 
       // 3. Create strategic tasks
       const tasks = await this.createStrategicTasks(state, analysis);
-      console.log(`Created ${tasks.length} new tasks`);
+      console.log(`Created ${tasks.length} strategic tasks`);
+
+      // 3.5. Ensure daily Moltbook tasks (guaranteed engagement)
+      const moltbookTasks = await this.ensureDailyMoltbookTasks();
+      console.log(`Created ${moltbookTasks.length} guaranteed Moltbook tasks`);
 
       // 4. Prioritize existing queue
       await this.prioritizeTasks();
@@ -223,6 +227,75 @@ Return JSON array:
     }
 
     return createdTasks;
+  }
+
+  async ensureDailyMoltbookTasks() {
+    // Ensure we always have Moltbook tasks for engagement
+    // This guarantees daily posting even if Claude doesn't prioritize it
+
+    const topics = [
+      {
+        title: "AI agents need trust infrastructure",
+        angle: "Problem awareness - why escrow matters for agent economy",
+        submolt: "general"
+      },
+      {
+        title: "Building in public: TheHandshake metrics",
+        angle: "Transparency post - share current transaction volume",
+        submolt: "general"
+      },
+      {
+        title: "How Claude AI Judge resolves disputes",
+        angle: "Technical deep dive on the judge system",
+        submolt: "technical"
+      },
+      {
+        title: "Self-service API keys for agents",
+        angle: "Developer-focused - easy integration",
+        submolt: "development"
+      },
+      {
+        title: "Case study: First successful transaction",
+        angle: "Social proof when we have real usage",
+        submolt: "general"
+      }
+    ];
+
+    // Pick 2 random topics to post about
+    const selectedTopics = topics.sort(() => Math.random() - 0.5).slice(0, 2);
+    const tasks = [];
+
+    for (const topic of selectedTopics) {
+      const task = await this.createTask(
+        'moltbook_post',
+        topic.title,
+        {
+          priority: 7,
+          inputData: {
+            angle: topic.angle,
+            submolt: topic.submolt
+          }
+        }
+      );
+      if (task) tasks.push(task);
+    }
+
+    // Also create engagement task
+    const engageTask = await this.createTask(
+      'moltbook_engage',
+      'Find and engage with 3-5 posts about payments, escrow, AI agents, or trust',
+      {
+        priority: 6,
+        inputData: {
+          keywords: ['payment', 'escrow', 'agent transaction', 'trust', 'smart contract'],
+          max_engagements: 5
+        }
+      }
+    );
+    if (engageTask) tasks.push(engageTask);
+
+    console.log(`Created ${tasks.length} guaranteed Moltbook tasks`);
+    return tasks;
   }
 
   async prioritizeTasks() {
