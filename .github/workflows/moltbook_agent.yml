@@ -1,0 +1,40 @@
+name: Moltbook Autonomous Agent
+
+on:
+  schedule:
+    # Run every 30 minutes
+    - cron: '*/30 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  engage:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        pip install requests
+
+    - name: Run Moltbook agent cycle
+      env:
+        MOLTBOOK_API_KEY: ${{ secrets.MOLTBOOK_API_KEY }}
+      run: |
+        python3 << 'PYTHON'
+        from moltbook_agent import MoltbookAgent
+        import os
+
+        api_key = os.environ['MOLTBOOK_API_KEY']
+        agent = MoltbookAgent(api_key)
+
+        print("Running engagement cycle...")
+        agent.auto_respond_to_mentions()
+        agent.engage_with_relevant_posts()
+        print("Cycle complete!")
+        PYTHON
