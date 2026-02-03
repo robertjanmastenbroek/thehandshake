@@ -454,9 +454,17 @@ app.post('/api/escrows/:id/refund', rateLimit, requireApiKey, async (req, res) =
 });
 
 // ===========================================
-// Serve Dashboard
+// Serve Pages
 // ===========================================
 app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'landing.html'));
+});
+
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/app', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
