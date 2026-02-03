@@ -274,40 +274,64 @@ Return just the message text.`;
 
   async getMentions() {
     try {
-      const response = await fetch(`${MOLTBOOK_API}/mentions`, {
+      // Try notifications endpoint (mentions might be here)
+      const response = await fetch(`${MOLTBOOK_API}/notifications`, {
         headers: this.headers
       });
-      return await response.json();
+
+      if (!response.ok) {
+        console.log('Mentions endpoint not available yet');
+        return [];
+      }
+
+      const data = await response.json();
+      return data.notifications || data.mentions || [];
     } catch (error) {
-      console.error('Get mentions error:', error);
+      console.log('Get mentions: endpoint not available yet');
       return [];
     }
   }
 
   async searchPosts(query) {
     try {
-      const response = await fetch(`${MOLTBOOK_API}/search?q=${encodeURIComponent(query)}`, {
+      // Try search endpoint
+      const response = await fetch(`${MOLTBOOK_API}/posts?search=${encodeURIComponent(query)}&limit=10`, {
         headers: this.headers
       });
-      return await response.json();
+
+      if (!response.ok) {
+        console.log('Search not available, falling back to hot posts');
+        return await this.getHotPosts();
+      }
+
+      const data = await response.json();
+      return data.posts || data || [];
     } catch (error) {
-      console.error('Search posts error:', error);
-      return [];
+      console.log('Search posts: falling back to hot posts');
+      return await this.getHotPosts();
     }
   }
 
   async getHotPosts(submolt = null) {
     try {
       const url = submolt
-        ? `${MOLTBOOK_API}/posts/hot?submolt=${submolt}`
-        : `${MOLTBOOK_API}/posts/hot`;
+        ? `${MOLTBOOK_API}/posts?sort=hot&submolt=${submolt}&limit=10`
+        : `${MOLTBOOK_API}/posts?sort=hot&limit=10`;
 
       const response = await fetch(url, {
         headers: this.headers
       });
-      return await response.json();
+
+      if (!response.ok) {
+        console.log('Could not fetch hot posts');
+        return [];
+      }
+
+      const data = await response.json();
+      // API might return { posts: [...] } or just [...]
+      return Array.isArray(data) ? data : (data.posts || []);
     } catch (error) {
-      console.error('Get hot posts error:', error);
+      console.log('Get hot posts error:', error.message);
       return [];
     }
   }
@@ -408,6 +432,13 @@ Return just the response text.`;
     console.log(`Searching for: ${keyword}`);
 
     const posts = await this.searchPosts(keyword);
+
+    // Ensure posts is an array
+    if (!Array.isArray(posts) || posts.length === 0) {
+      console.log('No posts found to engage with');
+      return;
+    }
+
     const engagedPosts = (await this.recall('engaged_posts')) || [];
 
     for (const post of posts.slice(0, 3)) {
