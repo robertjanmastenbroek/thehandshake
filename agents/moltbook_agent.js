@@ -265,10 +265,20 @@ Return just the message text.`;
         headers: this.headers,
         body: JSON.stringify({ submolt, title, content })
       });
-      return await response.json();
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ Create post failed: ${response.status} ${response.statusText}`);
+        console.error(`Response: ${errorText.slice(0, 200)}`);
+        throw new Error(`Moltbook API error: ${response.status} - ${errorText.slice(0, 100)}`);
+      }
+
+      const data = await response.json();
+      console.log(`✓ Post created: ${data.id || 'unknown ID'}`);
+      return data;
     } catch (error) {
-      console.error('Create post error:', error);
-      return null;
+      console.error('Create post error:', error.message);
+      throw error; // Re-throw so task gets marked as failed
     }
   }
 
@@ -343,10 +353,20 @@ Return just the message text.`;
         headers: this.headers,
         body: JSON.stringify({ content })
       });
-      return await response.json();
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ Reply failed: ${response.status} ${response.statusText}`);
+        console.error(`Response: ${errorText.slice(0, 200)}`);
+        throw new Error(`Moltbook API error: ${response.status} - ${errorText.slice(0, 100)}`);
+      }
+
+      const data = await response.json();
+      console.log(`✓ Comment posted on post ${postId}`);
+      return data;
     } catch (error) {
-      console.error('Reply error:', error);
-      return null;
+      console.error('Reply error:', error.message);
+      throw error; // Re-throw so task gets marked as failed
     }
   }
 
@@ -356,9 +376,18 @@ Return just the message text.`;
         method: 'POST',
         headers: this.headers
       });
-      return await response.json();
+
+      if (!response.ok) {
+        // Don't throw for upvote failures - not critical
+        console.log(`⚠️  Upvote failed: ${response.status} (non-critical)`);
+        return null;
+      }
+
+      const data = await response.json();
+      console.log(`✓ Upvoted post ${postId}`);
+      return data;
     } catch (error) {
-      console.error('Upvote error:', error);
+      console.log(`⚠️  Upvote error: ${error.message} (non-critical)`);
       return null;
     }
   }
@@ -454,8 +483,13 @@ Return just the response text.`;
         // Comment if valuable
         const comment = await this.generateComment(post);
         if (comment && comment.length > 20) {
-          await this.replyToPost(post.id, comment);
-          await this.trackEngagement('comment', post.id, post.author, comment.slice(0, 100));
+          try {
+            await this.replyToPost(post.id, comment);
+            await this.trackEngagement('comment', post.id, post.author, comment.slice(0, 100));
+          } catch (error) {
+            console.error(`Failed to comment on post ${post.id}: ${error.message}`);
+            // Continue to next post
+          }
         }
 
         engagedPosts.push(post.id);
