@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Handshake | A2A Escrow Toll Booth</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'holy-gold': '#D4AF37',
+            'holy-gold-light': '#F4E4BC',
+            'dark-void': '#0A0A0F',
+            'dark-surface': '#121218',
+            'dark-elevated': '#1A1A24',
+            'dark-border': '#2A2A3A'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .glow-gold { box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
+    .glow-gold-subtle { box-shadow: 0 0 10px rgba(212, 175, 55, 0.15); }
+    .status-pulse { animation: pulse 2s infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .gradient-border {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(212, 175, 55, 0.05));
+    }
+  </style>
+</head>
+<body class="bg-dark-void text-white min-h-screen">
+  <!-- Header -->
+  <header class="border-b border-dark-border">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-holy-gold to-holy-gold-light flex items-center justify-center">
+          <span class="text-dark-void text-xl">🤝</span>
+        </div>
+        <div>
+          <h1 class="text-xl font-semibold text-white">The Handshake</h1>
+          <p class="text-xs text-gray-500">A2A Escrow Toll Booth</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 rounded-full bg-green-500 status-pulse"></div>
+          <span class="text-sm text-gray-400">System Online</span>
+        </div>
+        <button onclick="openCreateModal()" class="px-4 py-2 bg-holy-gold text-dark-void font-medium rounded-lg hover:bg-holy-gold-light transition-colors">
+          + New Escrow
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-6 py-8">
+    <!-- Stats Row -->
+    <div class="grid grid-cols-4 gap-4 mb-8">
+      <div class="bg-dark-surface border border-dark-border rounded-xl p-5">
+        <p class="text-gray-500 text-sm mb-1">Total Escrows</p>
+        <p class="text-2xl font-semibold text-white" id="stat-total">-</p>
+      </div>
+      <div class="bg-dark-surface border border-dark-border rounded-xl p-5">
+        <p class="text-gray-500 text-sm mb-1">Locked</p>
+        <p class="text-2xl font-semibold text-yellow-500" id="stat-locked">-</p>
+      </div>
+      <div class="bg-dark-surface border border-dark-border rounded-xl p-5">
+        <p class="text-gray-500 text-sm mb-1">Verified</p>
+        <p class="text-2xl font-semibold text-green-500" id="stat-verified">-</p>
+      </div>
+      <div class="bg-dark-surface border border-dark-border rounded-xl p-5">
+        <p class="text-gray-500 text-sm mb-1">Toll Collected</p>
+        <p class="text-2xl font-semibold text-holy-gold" id="stat-toll">-</p>
+      </div>
+    </div>
+
+    <!-- Escrows Table -->
+    <div class="bg-dark-surface border border-dark-border rounded-xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between">
+        <h2 class="text-lg font-medium">Active Escrows</h2>
+        <button onclick="refreshEscrows()" class="text-sm text-gray-400 hover:text-holy-gold transition-colors flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Refresh
+        </button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-dark-elevated">
+            <tr class="text-left text-sm text-gray-500">
+              <th class="px-6 py-3 font-medium">ID</th>
+              <th class="px-6 py-3 font-medium">Buyer Agent</th>
+              <th class="px-6 py-3 font-medium">Worker Agent</th>
+              <th class="px-6 py-3 font-medium">Amount</th>
+              <th class="px-6 py-3 font-medium">Status</th>
+              <th class="px-6 py-3 font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="escrows-table" class="divide-y divide-dark-border">
+            <tr>
+              <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                Loading escrows...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Create Escrow Modal -->
+  <div id="create-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-dark-surface border border-dark-border rounded-2xl w-full max-w-lg mx-4 glow-gold-subtle">
+      <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between">
+        <h3 class="text-lg font-medium">Create New Escrow</h3>
+        <button onclick="closeCreateModal()" class="text-gray-500 hover:text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <form id="create-form" class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Buyer Agent ID *</label>
+          <input type="text" name="buyer_agent_id" required class="w-full bg-dark-elevated border border-dark-border rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:border-holy-gold focus:outline-none transition-colors" placeholder="agent_buyer_123">
+        </div>
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Worker Agent ID</label>
+          <input type="text" name="worker_agent_id" class="w-full bg-dark-elevated border border-dark-border rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:border-holy-gold focus:outline-none transition-colors" placeholder="agent_worker_456">
+        </div>
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Job Description *</label>
+          <textarea name="job_description" required rows="3" class="w-full bg-dark-elevated border border-dark-border rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:border-holy-gold focus:outline-none transition-colors resize-none" placeholder="Describe the work to be verified..."></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Amount *</label>
+            <input type="number" name="amount_locked" required step="0.0001" class="w-full bg-dark-elevated border border-dark-border rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:border-holy-gold focus:outline-none transition-colors" placeholder="0.1">
+          </div>
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Currency</label>
+            <select name="currency" class="w-full bg-dark-elevated border border-dark-border rounded-lg px-4 py-3 text-white focus:border-holy-gold focus:outline-none transition-colors">
+              <option value="ETH">ETH</option>
+              <option value="USDC">USDC</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Worker Wallet Address</label>
+          <input type="text" name="worker_wallet" class="w-full bg-dark-elevated border border-dark-border rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:border-holy-gold focus:outline-none transition-colors mono text-sm" placeholder="0x...">
+        </div>
+        <div class="pt-4">
+          <button type="submit" class="w-full py-3 bg-holy-gold text-dark-void font-semibold rounded-lg hover:bg-holy-gold-light transition-colors">
+            Lock Funds & Create Escrow
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Escrow Detail Modal -->
+  <div id="detail-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-dark-surface border border-dark-border rounded-2xl w-full max-w-2xl mx-4 glow-gold-subtle max-h-[90vh] overflow-y-auto">
+      <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between sticky top-0 bg-dark-surface">
+        <h3 class="text-lg font-medium">Escrow Details</h3>
+        <button onclick="closeDetailModal()" class="text-gray-500 hover:text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div id="detail-content" class="p-6">
+        <!-- Filled dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '';
+
+    // API Key for authenticated requests (loaded from localStorage or prompt)
+    let API_KEY = localStorage.getItem('handshake_api_key') || '';
+
+    // Helper for authenticated fetch
+    async function authFetch(url, options = {}) {
+      const headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${API_KEY}`
+      };
+      return fetch(url, { ...options, headers });
+    }
+
+    // Prompt for API key if not set
+    function promptForApiKey() {
+      const key = prompt('Enter your Handshake API key (from .env HANDSHAKE_API_KEY):');
+      if (key) {
+        API_KEY = key;
+        localStorage.setItem('handshake_api_key', key);
+        return true;
+      }
+      return false;
+    }
+
+    // Status badge styles
+    const statusStyles = {
+      'LOCKED': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+      'PENDING_VERIFICATION': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+      'VERIFIED': 'bg-green-500/20 text-green-400 border-green-500/30',
+      'REJECTED': 'bg-red-500/20 text-red-400 border-red-500/30',
+      'PAID': 'bg-holy-gold/20 text-holy-gold border-holy-gold/30',
+      'REFUNDED': 'bg-gray-500/20 text-gray-400 border-gray-500/30'
+    };
+
+    // Fetch and display escrows
+    async function refreshEscrows() {
+      try {
+        const res = await fetch(`${API_BASE}/api/escrows`);
+        const data = await res.json();
+
+        if (!data.success) throw new Error(data.error);
+
+        const escrows = data.escrows || [];
+        updateStats(escrows);
+        renderEscrows(escrows);
+      } catch (err) {
+        console.error('Failed to fetch escrows:', err);
+        document.getElementById('escrows-table').innerHTML = `
+          <tr>
+            <td colspan="6" class="px-6 py-12 text-center text-red-400">
+              Failed to load escrows. Is the server running?
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    // Update stats
+    function updateStats(escrows) {
+      document.getElementById('stat-total').textContent = escrows.length;
+      document.getElementById('stat-locked').textContent = escrows.filter(e => e.status === 'LOCKED').length;
+      document.getElementById('stat-verified').textContent = escrows.filter(e => e.status === 'VERIFIED' || e.status === 'PAID').length;
+
+      const tollCollected = escrows
+        .filter(e => e.status === 'PAID')
+        .reduce((sum, e) => sum + (e.toll_fee || 0), 0);
+      document.getElementById('stat-toll').textContent = `${tollCollected.toFixed(4)} ETH`;
+    }
+
+    // Render escrows table
+    function renderEscrows(escrows) {
+      const tbody = document.getElementById('escrows-table');
+
+      if (escrows.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+              No escrows yet. Create one to get started.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = escrows.map(escrow => `
+        <tr class="hover:bg-dark-elevated transition-colors">
+          <td class="px-6 py-4 mono text-sm text-gray-400">${escrow.id?.slice(0, 8) || '-'}...</td>
+          <td class="px-6 py-4 text-sm">${escrow.buyer_agent_id || '-'}</td>
+          <td class="px-6 py-4 text-sm">${escrow.worker_agent_id || '<span class="text-gray-600">Unassigned</span>'}</td>
+          <td class="px-6 py-4 mono text-sm">${escrow.amount_locked} ${escrow.currency}</td>
+          <td class="px-6 py-4">
+            <span class="px-3 py-1 rounded-full text-xs font-medium border ${statusStyles[escrow.status] || 'bg-gray-500/20 text-gray-400'}">
+              ${escrow.status}
+            </span>
+          </td>
+          <td class="px-6 py-4">
+            <button onclick="viewEscrow('${escrow.id}')" class="text-holy-gold hover:text-holy-gold-light text-sm font-medium">
+              View →
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // View single escrow
+    async function viewEscrow(id) {
+      try {
+        const res = await fetch(`${API_BASE}/api/escrows/${id}`);
+        const data = await res.json();
+
+        if (!data.success) throw new Error(data.error);
+
+        const e = data.escrow;
+        document.getElementById('detail-content').innerHTML = `
+          <div class="space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <p class="text-sm text-gray-500 mb-1">Status</p>
+                <span class="px-3 py-1 rounded-full text-sm font-medium border ${statusStyles[e.status]}">
+                  ${e.status}
+                </span>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500 mb-1">Created</p>
+                <p class="text-white">${new Date(e.created_at).toLocaleString()}</p>
+              </div>
+            </div>
+
+            <div class="bg-dark-elevated rounded-lg p-4">
+              <p class="text-sm text-gray-500 mb-2">Job Description</p>
+              <p class="text-white whitespace-pre-wrap">${e.job_description}</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-dark-elevated rounded-lg p-4">
+                <p class="text-sm text-gray-500 mb-1">Amount Locked</p>
+                <p class="text-xl font-semibold text-white mono">${e.amount_locked} ${e.currency}</p>
+              </div>
+              <div class="bg-dark-elevated rounded-lg p-4">
+                <p class="text-sm text-gray-500 mb-1">Worker Payout (after 2.5% toll)</p>
+                <p class="text-xl font-semibold text-green-400 mono">${e.worker_payout} ${e.currency}</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <p class="text-sm text-gray-500 mb-1">Buyer Agent</p>
+                <p class="text-white mono text-sm">${e.buyer_agent_id}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500 mb-1">Worker Agent</p>
+                <p class="text-white mono text-sm">${e.worker_agent_id || 'Unassigned'}</p>
+              </div>
+            </div>
+
+            ${e.worker_wallet ? `
+            <div>
+              <p class="text-sm text-gray-500 mb-1">Worker Wallet</p>
+              <p class="text-white mono text-xs break-all">${e.worker_wallet}</p>
+            </div>
+            ` : ''}
+
+            ${e.work_submitted ? `
+            <div class="bg-dark-elevated rounded-lg p-4">
+              <p class="text-sm text-gray-500 mb-2">Submitted Work</p>
+              <p class="text-white whitespace-pre-wrap text-sm">${e.work_submitted.substring(0, 500)}${e.work_submitted.length > 500 ? '...' : ''}</p>
+            </div>
+            ` : ''}
+
+            ${e.judge_verdict ? `
+            <div class="bg-dark-elevated rounded-lg p-4">
+              <p class="text-sm text-gray-500 mb-2">Judge Verdict</p>
+              <p class="text-2xl font-bold ${e.judge_verdict === 'VALID' ? 'text-green-400' : 'text-red-400'}">
+                ${e.judge_verdict === 'VALID' ? '✓' : '✗'} ${e.judge_verdict}
+              </p>
+            </div>
+            ` : ''}
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3 pt-4 border-t border-dark-border">
+              ${e.status === 'PENDING_VERIFICATION' ? `
+                <button onclick="verifyEscrow('${e.id}')" class="flex-1 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                  ⚖️ Run AI Judge
+                </button>
+              ` : ''}
+              ${e.status === 'VERIFIED' ? `
+                <button onclick="payoutEscrow('${e.id}')" class="flex-1 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors">
+                  💰 Execute Payout
+                </button>
+              ` : ''}
+              ${e.status === 'REJECTED' ? `
+                <button onclick="refundEscrow('${e.id}')" class="flex-1 py-3 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors">
+                  ↩️ Process Refund
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+
+        document.getElementById('detail-modal').classList.remove('hidden');
+        document.getElementById('detail-modal').classList.add('flex');
+      } catch (err) {
+        console.error('Failed to load escrow:', err);
+        alert('Failed to load escrow details');
+      }
+    }
+
+    // Verify escrow
+    async function verifyEscrow(id) {
+      if (!API_KEY && !promptForApiKey()) return;
+      try {
+        const res = await authFetch(`${API_BASE}/api/escrows/${id}/verify`, { method: 'POST' });
+        const data = await res.json();
+
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem('handshake_api_key');
+          API_KEY = '';
+          alert('Invalid API key. Please try again.');
+          return;
+        }
+
+        alert(data.message || (data.success ? 'Verification complete!' : 'Verification failed'));
+        closeDetailModal();
+        refreshEscrows();
+      } catch (err) {
+        alert('Failed to verify: ' + err.message);
+      }
+    }
+
+    // Payout escrow
+    async function payoutEscrow(id) {
+      if (!API_KEY && !promptForApiKey()) return;
+      try {
+        const res = await authFetch(`${API_BASE}/api/escrows/${id}/payout`, { method: 'POST' });
+        const data = await res.json();
+
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem('handshake_api_key');
+          API_KEY = '';
+          alert('Invalid API key. Please try again.');
+          return;
+        }
+
+        alert(data.message || (data.success ? 'Payout complete!' : 'Payout failed'));
+        closeDetailModal();
+        refreshEscrows();
+      } catch (err) {
+        alert('Failed to payout: ' + err.message);
+      }
+    }
+
+    // Refund escrow
+    async function refundEscrow(id) {
+      if (!API_KEY && !promptForApiKey()) return;
+      try {
+        const res = await authFetch(`${API_BASE}/api/escrows/${id}/refund`, { method: 'POST' });
+        const data = await res.json();
+
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem('handshake_api_key');
+          API_KEY = '';
+          alert('Invalid API key. Please try again.');
+          return;
+        }
+
+        alert(data.message || (data.success ? 'Refund complete!' : 'Refund failed'));
+        closeDetailModal();
+        refreshEscrows();
+      } catch (err) {
+        alert('Failed to refund: ' + err.message);
+      }
+    }
+
+    // Modal controls
+    function openCreateModal() {
+      document.getElementById('create-modal').classList.remove('hidden');
+      document.getElementById('create-modal').classList.add('flex');
+    }
+
+    function closeCreateModal() {
+      document.getElementById('create-modal').classList.add('hidden');
+      document.getElementById('create-modal').classList.remove('flex');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detail-modal').classList.add('hidden');
+      document.getElementById('detail-modal').classList.remove('flex');
+    }
+
+    // Create escrow form
+    document.getElementById('create-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!API_KEY && !promptForApiKey()) return;
+
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+
+      try {
+        const res = await authFetch(`${API_BASE}/api/escrows`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem('handshake_api_key');
+          API_KEY = '';
+          alert('Invalid API key. Please try again.');
+          return;
+        }
+
+        if (result.success) {
+          alert('Escrow created successfully!');
+          closeCreateModal();
+          e.target.reset();
+          refreshEscrows();
+        } else {
+          alert('Error: ' + result.error);
+        }
+      } catch (err) {
+        alert('Failed to create escrow: ' + err.message);
+      }
+    });
+
+    // Close modals on backdrop click
+    document.getElementById('create-modal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeCreateModal();
+    });
+    document.getElementById('detail-modal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeDetailModal();
+    });
+
+    // Initial load
+    refreshEscrows();
+
+    // Auto-refresh every 10 seconds (One Mississippi test)
+    setInterval(refreshEscrows, 10000);
+  </script>
+</body>
+</html>
