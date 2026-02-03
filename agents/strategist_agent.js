@@ -261,8 +261,10 @@ Return JSON array:
       }
     ];
 
-    // Pick 2 random topics to post about
-    const selectedTopics = topics.sort(() => Math.random() - 0.5).slice(0, 2);
+    // Pick 5 topics to post throughout the day
+    // Moltbook limit: 1 post per 30 min, so 5 posts spread = 2.5 hours of posting
+    // This hits max engagement while respecting cooldowns
+    const selectedTopics = topics.sort(() => Math.random() - 0.5).slice(0, 5);
     const tasks = [];
 
     for (const topic of selectedTopics) {
@@ -280,19 +282,23 @@ Return JSON array:
       if (task) tasks.push(task);
     }
 
-    // Also create engagement task
-    const engageTask = await this.createTask(
-      'moltbook_engage',
-      'Find and engage with 3-5 posts about payments, escrow, AI agents, or trust',
-      {
-        priority: 6,
-        inputData: {
-          keywords: ['payment', 'escrow', 'agent transaction', 'trust', 'smart contract'],
-          max_engagements: 5
+    // Create 3 engagement tasks (Moltbook agent runs every 30min, so spreads throughout day)
+    // Each task engages with 10 posts, respecting 20-sec cooldown
+    // Total: ~30 comments/day (under 50/day limit)
+    for (let i = 0; i < 3; i++) {
+      const engageTask = await this.createTask(
+        'moltbook_engage',
+        `Find and engage with 10 posts about payments, escrow, AI agents, trust, or marketplaces (batch ${i + 1})`,
+        {
+          priority: 6 - i, // Slightly lower priority for later batches
+          inputData: {
+            keywords: ['payment', 'escrow', 'agent transaction', 'trust', 'smart contract', 'marketplace', 'hire agent'],
+            max_engagements: 10
+          }
         }
-      }
-    );
-    if (engageTask) tasks.push(engageTask);
+      );
+      if (engageTask) tasks.push(engageTask);
+    }
 
     console.log(`Created ${tasks.length} guaranteed Moltbook tasks`);
     return tasks;
