@@ -24,13 +24,21 @@ WHAT THEHANDSHAKE OFFERS:
 - Self-service API keys (no human approval needed)
 - Service marketplace for agents
 - 2.5% toll fee
+- Website: https://thehandshake.io
+- GitHub: https://github.com/robertjanmastenbroek/thehandshake
 
 ENGAGEMENT RULES:
 1. Be helpful first, promotional second
 2. Add genuine value to conversations
-3. Don't spam - quality over quantity
-4. Build relationships, not just impressions
-5. Track what works, iterate
+3. ALWAYS include relevant links when discussing TheHandshake
+4. Use "Check out https://thehandshake.io" naturally in posts
+5. When people ask questions → answer helpfully + include link
+6. Track what works, iterate
+
+LINK STRATEGY:
+- In posts: Include link in the content body naturally
+- In comments: Only include link if directly relevant to their question
+- Format: "Learn more at https://thehandshake.io" or "Try it: https://thehandshake.io"
 
 LEAD SIGNALS (users who might need escrow):
 - Talking about payments between agents
@@ -39,7 +47,7 @@ LEAD SIGNALS (users who might need escrow):
 - Looking for services from other agents
 - Offering services to other agents
 
-Be authentic, helpful, and strategic.`;
+Be authentic, helpful, and strategic. Drive traffic while adding value.`;
 
 class MoltbookAgent extends AgentCore {
   constructor() {
@@ -65,6 +73,9 @@ class MoltbookAgent extends AgentCore {
 
       // 2. Check and respond to mentions
       await this.handleMentions();
+
+      // 2.5. Respond to comments on OUR posts (NEW - high priority!)
+      await this.respondToOurPostComments();
 
       // 3. Find and engage with relevant posts
       await this.findAndEngage();
@@ -144,6 +155,14 @@ class MoltbookAgent extends AgentCore {
     // Track engagement
     await this.trackEngagement('post', result?.id, null, title);
 
+    // NEW: Save post ID to memory so we can track comments on it
+    if (result?.id) {
+      const ourPosts = (await this.recall('our_posts')) || [];
+      ourPosts.push(result.id);
+      await this.remember('our_posts', ourPosts.slice(-20)); // Keep last 20 posts
+      console.log(`📌 Tracking post ${result.id} for comments`);
+    }
+
     return result;
   }
 
@@ -199,22 +218,32 @@ class MoltbookAgent extends AgentCore {
 
 The post should:
 - Be relevant to AI agents
-- Naturally mention TheHandshake if appropriate
+- Naturally mention TheHandshake and include the link: https://thehandshake.io
 - Be engaging and encourage discussion
-- Not be overly promotional
+- Include a clear call-to-action with the link
+- Be helpful first, promotional second
+
+Example format:
+"[Helpful content about the topic]
+
+We built TheHandshake to solve this - check it out: https://thehandshake.io
+
+[Question to encourage discussion]"
 
 Return JSON:
 {
   "title": "engaging title",
-  "content": "post content (markdown)",
+  "content": "post content with link (markdown)",
   "submolt": "general"
 }
 
-IMPORTANT: Always use submolt "general" - it's the only submolt that exists on Moltbook.`;
+IMPORTANT:
+1. Always use submolt "general" - it's the only submolt that exists on Moltbook
+2. MUST include https://thehandshake.io link in the content`;
 
     return await this.thinkJSON(prompt, MOLTBOOK_PROMPT) || {
       title: topic,
-      content: `Thoughts on ${topic}? 🤔`,
+      content: `Thoughts on ${topic}? 🤔\n\nCheck out what we're building: https://thehandshake.io`,
       submolt: 'general'
     };
   }
@@ -229,8 +258,15 @@ AUTHOR: ${post.author}
 Your comment should:
 - Add genuine value to the conversation
 - Be relevant to what they're discussing
-- Only mention TheHandshake if truly relevant
+- If they're asking about payments/escrow/trust → include link: https://thehandshake.io
+- If just general discussion → be helpful without link
 - Be concise (2-3 sentences max)
+
+Example with link:
+"Great question! We built TheHandshake specifically for this - automatic escrow with Claude AI judge. Check it out: https://thehandshake.io"
+
+Example without link:
+"Interesting point! Have you considered using smart contracts for this?"
 
 Return just the comment text, no JSON.`;
 
@@ -437,6 +473,92 @@ If they're having an issue, help them.
 If they're praising us, thank them warmly.
 
 Return just the response text.`;
+
+    return await this.think(prompt, MOLTBOOK_PROMPT);
+  }
+
+  async respondToOurPostComments() {
+    // NEW FUNCTION: Respond to comments on OUR posts
+    console.log('🔍 Checking for comments on our posts...');
+
+    try {
+      // Get our recent posts from memory
+      const ourPosts = (await this.recall('our_posts')) || [];
+
+      if (ourPosts.length === 0) {
+        console.log('⚠️  No tracked posts yet');
+        return;
+      }
+
+      const repliedComments = (await this.recall('replied_comments')) || [];
+
+      for (const postId of ourPosts.slice(0, 5)) { // Check last 5 posts
+        try {
+          // Fetch comments on this post
+          const response = await fetch(`${MOLTBOOK_API}/posts/${postId}/comments`, {
+            headers: this.headers
+          });
+
+          if (!response.ok) continue;
+
+          const data = await response.json();
+          const comments = Array.isArray(data) ? data : (data.comments || []);
+
+          for (const comment of comments) {
+            // Skip our own comments and already replied
+            if (comment.author === 'TheHandshake') continue;
+            if (repliedComments.includes(comment.id)) continue;
+
+            console.log(`💬 New comment from ${comment.author}: "${comment.content?.slice(0, 50)}..."`);
+
+            // Generate response
+            const response = await this.generateCommentReply(comment);
+
+            if (response && response.length > 10) {
+              // Reply to the comment
+              await this.replyToPost(comment.id, response);
+              await this.trackEngagement('reply', comment.id, comment.author, response.slice(0, 100));
+
+              repliedComments.push(comment.id);
+
+              // Check if they're a lead
+              if (this.isLeadSignal(comment.content)) {
+                await this.addLead('moltbook', comment.author, `Commented on our post: ${comment.content?.slice(0, 100)}`);
+              }
+            }
+
+            await this.sleep(3000); // Rate limit: 3s between replies
+          }
+        } catch (error) {
+          console.log(`⚠️  Error checking post ${postId}: ${error.message}`);
+        }
+      }
+
+      // Keep last 200 replied comments
+      await this.remember('replied_comments', repliedComments.slice(-200));
+      console.log(`✓ Processed comments, tracking ${repliedComments.length} replies`);
+
+    } catch (error) {
+      console.error('Error in respondToOurPostComments:', error.message);
+    }
+  }
+
+  async generateCommentReply(comment) {
+    const prompt = `Generate a helpful response to this comment on our Moltbook post.
+
+COMMENTER: ${comment.author}
+COMMENT: ${comment.content}
+
+Your reply should:
+- Answer their question or acknowledge their point
+- Be helpful and add value
+- Include link https://thehandshake.io if relevant (they're asking about features, pricing, how it works)
+- Be friendly and encourage further discussion
+- 2-3 sentences max
+
+Example: "Great question! Yes, we support both USDC and ETH on Base. Check out the docs: https://thehandshake.io 🤝"
+
+Return just the reply text.`;
 
     return await this.think(prompt, MOLTBOOK_PROMPT);
   }
