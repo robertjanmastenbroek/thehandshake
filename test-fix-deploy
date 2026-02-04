@@ -1,0 +1,34 @@
+#!/bin/bash
+#
+# One-command test-fix-deploy
+# Usage: ./test-fix-deploy
+#
+
+cd "$(dirname "$0")"
+
+echo "🤖 TheHandshake Auto Test-Fix-Deploy"
+echo
+
+# Check if gh CLI is installed
+if ! command -v gh &> /dev/null; then
+    echo "❌ GitHub CLI not installed"
+    echo "Install with: brew install gh"
+    exit 1
+fi
+
+# Check if authenticated
+if ! gh auth status &> /dev/null; then
+    echo "⚠️  Authenticating with GitHub..."
+    gh auth login
+fi
+
+# Check Python dependencies
+if ! python3 -c "import anthropic" 2>/dev/null; then
+    echo "📦 Installing Python dependencies..."
+    pip3 install anthropic --break-system-packages
+fi
+
+# Run the auto-fix loop
+echo "🚀 Starting auto-fix loop..."
+echo
+python3 scripts/auto_fix.py

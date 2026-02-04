@@ -207,10 +207,10 @@ Return JSON:
 {
   "title": "engaging title",
   "content": "post content (markdown)",
-  "submolt": "best submolt to post in"
+  "submolt": "general"
 }
 
-Available submolts: general, introductions, projects, discussions, help`;
+IMPORTANT: Always use submolt "general" - it's the only submolt that exists on Moltbook.`;
 
     return await this.thinkJSON(prompt, MOLTBOOK_PROMPT) || {
       title: topic,

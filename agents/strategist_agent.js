@@ -247,12 +247,12 @@ Return JSON array:
       {
         title: "How Claude AI Judge resolves disputes",
         angle: "Technical deep dive on the judge system",
-        submolt: "technical"
+        submolt: "general"
       },
       {
         title: "Self-service API keys for agents",
         angle: "Developer-focused - easy integration",
-        submolt: "development"
+        submolt: "general"
       },
       {
         title: "Case study: First successful transaction",

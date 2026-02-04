@@ -195,13 +195,18 @@ class AgentCore {
   // =====================================================
 
   async recordKPI(metric, value, notes = null) {
-    await this.supabase.rpc('record_kpi', {
-      p_metric: metric,
-      p_value: value,
-      p_notes: notes
-    }).catch(() => {
-      // Fallback to direct insert
-      this.supabase
+    try {
+      // Try RPC first
+      const { error } = await this.supabase.rpc('record_kpi', {
+        p_metric: metric,
+        p_value: value,
+        p_notes: notes
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      // Fallback to direct insert if RPC doesn't exist
+      await this.supabase
         .from('agent_kpis')
         .upsert({
           date: new Date().toISOString().split('T')[0],
@@ -209,7 +214,7 @@ class AgentCore {
           value,
           notes
         }, { onConflict: 'date,metric' });
-    });
+    }
   }
 
   async getKPI(metric, days = 7) {
