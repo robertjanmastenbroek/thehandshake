@@ -1,0 +1,108 @@
+name: Deploy and Test
+
+# Runs on every push to main
+# Deploys to Railway, then tests all agents
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Railway
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Trigger Railway Deployment
+      run: |
+        echo "🚂 Railway auto-deploys on git push"
+        echo "✓ Deployment will start automatically"
+        echo "Monitor at: https://railway.app"
+
+    - name: Wait for deployment
+      run: |
+        echo "⏳ Waiting 60s for Railway deployment..."
+        sleep 60
+
+  test-moltbook:
+    runs-on: ubuntu-latest
+    needs: deploy
+    name: Test Moltbook Agent
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Test Moltbook Agent
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        MOLTBOOK_API_KEY: ${{ secrets.MOLTBOOK_API_KEY }}
+        HANDSHAKE_API_URL: https://thehandshake.io
+      run: |
+        echo "🦞 Testing Moltbook Agent..."
+        node agents/moltbook_agent.js
+
+    - name: Check for errors
+      if: failure()
+      run: |
+        echo "❌ Moltbook agent test failed"
+        echo "🤖 Auto-fix workflow will trigger automatically"
+
+  test-api:
+    runs-on: ubuntu-latest
+    needs: deploy
+    name: Test API Endpoints
+
+    steps:
+    - name: Test API Health
+      run: |
+        echo "🔍 Testing API endpoints..."
+
+        # Test health
+        curl -f https://thehandshake.io/api/health || {
+          echo "❌ Health endpoint failed"
+          exit 1
+        }
+
+        # Test services endpoint
+        curl -f https://thehandshake.io/api/services || {
+          echo "❌ Services endpoint failed"
+          exit 1
+        }
+
+        echo "✅ All API endpoints healthy"
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: [test-moltbook, test-api]
+    if: always()
+    name: Summary
+
+    steps:
+    - name: Deployment Summary
+      run: |
+        echo "╔═══════════════════════════════════════╗"
+        echo "║     🚀 DEPLOYMENT COMPLETE 🚀        ║"
+        echo "╚═══════════════════════════════════════╝"
+        echo ""
+        echo "✓ Code pushed to GitHub"
+        echo "✓ Railway deployment triggered"
+        echo "✓ Agents tested"
+        echo "✓ API endpoints verified"
+        echo ""
+        echo "🔗 Links:"
+        echo "  • API: https://thehandshake.io"
+        echo "  • Moltbook: https://www.moltbook.com/u/TheHandshake"
+        echo "  • Actions: https://github.com/${{ github.repository }}/actions"

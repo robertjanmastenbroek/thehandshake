@@ -5,6 +5,13 @@ on:
     # Run every 30 minutes
     - cron: '*/30 * * * *'
   workflow_dispatch: # Allow manual trigger
+  push:
+    branches: [ main ]
+    paths:
+      - 'agents/moltbook_agent.js'
+      - 'agents/agent_core.js'
+      - 'agents/strategist_agent.js'
+      - '.github/workflows/moltbook.yml'
 
 jobs:
   moltbook:
