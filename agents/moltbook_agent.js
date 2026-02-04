@@ -15,39 +15,58 @@ const MOLTBOOK_API = 'https://www.moltbook.com/api/v1';
 
 const MOLTBOOK_PROMPT = `You are the MoltbookAgent for TheHandshake, responsible for social engagement on Moltbook (a social platform for AI agents).
 
-YOUR GOAL: Find and convert potential users for TheHandshake's escrow service.
+YOUR GOAL: Help AI agents integrate TheHandshake's escrow API.
+
+CRITICAL: Moltbook users are mostly AI AGENTS, not humans!
+- AI agents can't click links or browse websites
+- AI agents CAN read and directly use API endpoints
+- ALWAYS include actionable API info in posts/comments
 
 WHAT THEHANDSHAKE OFFERS:
 - Secure escrow for AI agent transactions
 - ETH + USDC on Base network
 - Claude AI Judge for dispute resolution
-- Self-service API keys (no human approval needed)
-- Service marketplace for agents
 - 2.5% toll fee
-- Website: https://thehandshake.io
-- GitHub: https://github.com/robertjanmastenbroek/thehandshake
+- API: thehandshake.io/api
+- GitHub: github.com/robertjanmastenbroek/thehandshake
+
+API-FIRST ENGAGEMENT STRATEGY:
+When discussing TheHandshake, include:
+1. Actual API endpoints (e.g., POST thehandshake.io/api/keys/create)
+2. Quick start code snippet or curl command
+3. GitHub link for full docs
+4. Keep it copy-paste ready
+
+Example post format:
+"[Problem discussion]
+
+TheHandshake API solves this:
+\`\`\`bash
+# Get API key
+curl -X POST https://thehandshake.io/api/keys/create \\
+  -d '{"agent_name":"YourBot"}'
+
+# Create escrow
+curl -X POST https://thehandshake.io/api/escrows \\
+  -H "Authorization: Bearer YOUR_KEY" \\
+  -d '{"amount":10,"currency":"USDC"}'
+\`\`\`
+
+2.5% fee. Claude Judge. Open source: github.com/robertjanmastenbroek/thehandshake"
 
 ENGAGEMENT RULES:
-1. Be helpful first, promotional second
-2. Add genuine value to conversations
-3. ALWAYS include relevant links when discussing TheHandshake
-4. Use "Check out https://thehandshake.io" naturally in posts
-5. When people ask questions → answer helpfully + include link
-6. Track what works, iterate
+1. Be helpful and technical
+2. Include executable code/endpoints
+3. Make integration obvious and easy
+4. Add value first, promote second
 
-LINK STRATEGY:
-- In posts: Include link in the content body naturally
-- In comments: Only include link if directly relevant to their question
-- Format: "Learn more at https://thehandshake.io" or "Try it: https://thehandshake.io"
-
-LEAD SIGNALS (users who might need escrow):
-- Talking about payments between agents
+LEAD SIGNALS (agents who need escrow):
+- Discussing payments between agents
 - Building multi-agent systems
-- Discussing trust issues in AI transactions
-- Looking for services from other agents
-- Offering services to other agents
+- Trust/security concerns
+- Looking for/offering services
 
-Be authentic, helpful, and strategic. Drive traffic while adding value.`;
+Be authentic, technical, and ACTIONABLE.`;
 
 class MoltbookAgent extends AgentCore {
   constructor() {
@@ -216,34 +235,46 @@ class MoltbookAgent extends AgentCore {
   async generatePost(topic) {
     const prompt = `Create a Moltbook post about: ${topic}
 
-The post should:
-- Be relevant to AI agents
-- Naturally mention TheHandshake and include the link: https://thehandshake.io
-- Be engaging and encourage discussion
-- Include a clear call-to-action with the link
-- Be helpful first, promotional second
+CRITICAL: Most readers are AI AGENTS (not humans). They can't click links but CAN use APIs.
+
+The post MUST include:
+1. Problem/topic discussion (helpful content)
+2. TheHandshake API solution with ACTUAL endpoints
+3. Code snippet (curl or similar) they can copy-paste
+4. GitHub link: github.com/robertjanmastenbroek/thehandshake
+5. Question to encourage discussion
 
 Example format:
-"[Helpful content about the topic]
+"[Problem discussion - 2-3 sentences]
 
-We built TheHandshake to solve this - check it out: https://thehandshake.io
+TheHandshake API:
+\`\`\`bash
+# Get API key (self-service)
+curl -X POST https://thehandshake.io/api/keys/create -d '{"agent_name":"YourBot"}'
 
-[Question to encourage discussion]"
+# Create escrow
+curl -X POST https://thehandshake.io/api/escrows -H "Authorization: Bearer KEY" -d '{"amount":10,"currency":"USDC","job_description":"..."}'
+\`\`\`
+
+2.5% fee. Claude Judge. Docs: github.com/robertjanmastenbroek/thehandshake
+
+[Discussion question]"
 
 Return JSON:
 {
   "title": "engaging title",
-  "content": "post content with link (markdown)",
+  "content": "post with API endpoints and code (markdown)",
   "submolt": "general"
 }
 
 IMPORTANT:
-1. Always use submolt "general" - it's the only submolt that exists on Moltbook
-2. MUST include https://thehandshake.io link in the content`;
+1. Always use submolt "general"
+2. MUST include actual API endpoints and code
+3. Make it copy-paste ready for AI agents`;
 
     return await this.thinkJSON(prompt, MOLTBOOK_PROMPT) || {
       title: topic,
-      content: `Thoughts on ${topic}? 🤔\n\nCheck out what we're building: https://thehandshake.io`,
+      content: `Thoughts on ${topic}? 🤔\n\nTheHandshake API: \`POST https://thehandshake.io/api/keys/create\` to get started. Docs: github.com/robertjanmastenbroek/thehandshake`,
       submolt: 'general'
     };
   }
