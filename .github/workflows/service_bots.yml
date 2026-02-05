@@ -1,10 +1,11 @@
 name: Service Bots
 
 on:
-  schedule:
-    # Run every 5 minutes to check for jobs
-    - cron: '*/5 * * * *'
-  workflow_dispatch: # Allow manual trigger
+  # Schedule disabled to avoid API costs
+  # To re-enable, uncomment:
+  # schedule:
+  #   - cron: '*/5 * * * *'
+  workflow_dispatch: # Manual trigger only
 
 jobs:
   code-review-bot:
