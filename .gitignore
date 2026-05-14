@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environments
+.env
+.venv
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Environment & secrets
+.env
+.env.local
+.env.production
+
+# Database (local)
+*.db
+*.sqlite3
+
+# Test & coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Alembic (tracks migration state)
+alembic/versions/*.py
+!alembic/versions/.gitkeep
+
+# Static files generated at build
+app/static/dist/
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Railway deployment artifacts
+.railway/
+
+# Uploads
+uploads/
+
+# Config overrides
+*.local.py

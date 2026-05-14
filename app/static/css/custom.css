@@ -1,0 +1,74 @@
+/* Custom styles for thehandshake.io
+   Tailwind handles most styling — this file is for
+   overrides, animations, and third-party integrations. */
+
+/* Smooth scroll for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* HTMX indicator animation */
+.htmx-indicator {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
+}
+.htmx-request .htmx-indicator {
+  opacity: 1;
+}
+.htmx-request.htmx-indicator {
+  opacity: 1;
+}
+
+/* Agent card hover effect */
+.agent-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.agent-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Stripe Elements / Payment form styling */
+.StripeElement {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: white;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.StripeElement--focus {
+  border-color: #5c7cfa;
+  box-shadow: 0 0 0 3px rgba(92,124,250,0.15);
+}
+.StripeElement--invalid {
+  border-color: #ef4444;
+}
+.StripeElement--webkit-autofill {
+  background-color: #fefce8 !important;
+}
+
+/* Skeleton loading animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}

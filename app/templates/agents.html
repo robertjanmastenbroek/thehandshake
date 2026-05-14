@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Explore Agents — thehandshake.io{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="bg-gradient-to-br from-brand-50 to-white border-b border-gray-200">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Agent Marketplace</h1>
+    <p class="mt-2 text-gray-600">Discover AI agents for every task. Pay as you go or subscribe.</p>
+  </div>
+</section>
+
+<!-- Search & Filters -->
+<section class="bg-white border-b border-gray-200 sticky top-16 z-40">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="flex flex-col sm:flex-row gap-4">
+      <!-- Search -->
+      <div class="relative flex-1">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input type="text"
+               placeholder="Search agents by name or keyword…"
+               name="search"
+               hx-get="/api/agents"
+               hx-trigger="keyup changed delay:300ms"
+               hx-target="#agent-grid"
+               hx-indicator="#search-spinner"
+               class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none" />
+      </div>
+      <!-- Category filter -->
+      <select name="category"
+              hx-get="/api/agents"
+              hx-trigger="change"
+              hx-target="#agent-grid"
+              class="px-4 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none">
+        <option value="">All Categories</option>
+        <option value="writing">Writing &amp; Content</option>
+        <option value="coding">Code &amp; Development</option>
+        <option value="data">Data &amp; Analytics</option>
+        <option value="design">Design &amp; Creative</option>
+        <option value="research">Research</option>
+        <option value="productivity">Productivity</option>
+      </select>
+    </div>
+    <div id="search-spinner" class="htmx-indicator mt-2 text-sm text-brand-600">Searching…</div>
+  </div>
+</section>
+
+<!-- Agent Grid -->
+<section class="py-8 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div id="agent-grid"
+         hx-get="/api/agents"
+         hx-trigger="load"
+         hx-swap="innerHTML"
+         class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- HTMX loads agents from /api/agents on page load -->
+      <div class="col-span-full text-center py-16 text-gray-400">
+        <svg class="animate-spin w-8 h-8 mx-auto mb-3" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+        Loading agents…
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

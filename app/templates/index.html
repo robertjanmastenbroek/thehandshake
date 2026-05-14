@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}thehandshake.io — AI Agent Marketplace{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative overflow-hidden bg-gradient-to-br from-brand-600 via-brand-700 to-indigo-900 text-white">
+  <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 25% 25%, rgba(255,255,255,0.2) 0%, transparent 50%);"></div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32 relative">
+    <div class="max-w-3xl mx-auto text-center">
+      <span class="inline-block px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-white/20 rounded-full mb-6">
+        Beta — Now Live
+      </span>
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
+        Your AI Agents,<br />
+        <span class="text-brand-200">Marketplace &amp; Infrastructure</span>
+      </h1>
+      <p class="mt-6 text-lg sm:text-xl text-brand-100 max-w-xl mx-auto">
+        List, discover, and transact AI agents with built-in payments,
+        authentication, and execution — all in one platform.
+      </p>
+      <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="/agents"
+           class="inline-flex items-center px-8 py-3.5 text-base font-semibold text-brand-700 bg-white rounded-xl shadow-lg hover:bg-gray-100 transition-all hover:shadow-xl">
+          Browse Agents
+          <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </a>
+        <a href="#features"
+           class="inline-flex items-center px-8 py-3.5 text-base font-medium text-white border border-white/30 rounded-xl hover:bg-white/10 transition-colors">
+          Learn More
+        </a>
+      </div>
+    </div>
+  </div>
+  <!-- Wave divider -->
+  <div class="absolute bottom-0 left-0 right-0">
+    <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0 60V30C240 0 480 0 720 30C960 60 1200 60 1440 30V60H0Z" fill="#f9fafb"/>
+    </svg>
+  </div>
+</section>
+
+<!-- Features -->
+<section id="features" class="py-20 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-bold text-gray-900">Everything you need to ship AI agents</h2>
+      <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+        From listing to payment to execution — a full-stack platform built for the agent economy.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8">
+      <!-- Feature 1 -->
+      <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+        <div class="w-12 h-12 bg-brand-100 text-brand-700 rounded-xl flex items-center justify-center mb-5">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 13l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-3">Discover Agents</h3>
+        <p class="text-gray-600 text-sm leading-relaxed">
+          Browse a curated marketplace of AI agents, search by capability,
+          compare pricing, and read reviews — all in one place.
+        </p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+        <div class="w-12 h-12 bg-green-100 text-green-700 rounded-xl flex items-center justify-center mb-5">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-3">Built-in Payments</h3>
+        <p class="text-gray-600 text-sm leading-relaxed">
+          Powered by Stripe. One-time purchases, subscriptions, or micro-transactions
+          (x402) — we handle the checkout flow end-to-end.
+        </p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+        <div class="w-12 h-12 bg-purple-100 text-purple-700 rounded-xl flex items-center justify-center mb-5">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-3">Execute Instantly</h3>
+        <p class="text-gray-600 text-sm leading-relaxed">
+          Agents connect via MCP or A2A protocols. Execute from anywhere with
+          API keys, webhooks, or the built-in execution proxy.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-20 bg-white">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <h2 class="text-3xl font-bold text-gray-900 mb-4">Ready to list your agent?</h2>
+    <p class="text-lg text-gray-600 mb-8 max-w-xl mx-auto">
+      Join the next generation of the AI economy. Create your dashboard
+      and publish your agent in minutes.
+    </p>
+    <a href="/dashboard"
+       class="inline-flex items-center px-8 py-3.5 text-base font-semibold text-white bg-brand-600 rounded-xl shadow-lg hover:bg-brand-700 transition-all hover:shadow-xl">
+      Get Started Free
+      <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+      </svg>
+    </a>
+  </div>
+</section>
+{% endblock %}
