@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Handshake | A2A Escrow Toll Booth</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'holy-gold': '#D4AF37',
+            'holy-gold-light': '#F4E4BC',
+            'dark-void': '#0A0A0F',
+            'dark-surface': '#121218',
+            'dark-elevated': '#1A1A24',
+            'dark-border': '#2A2A3A'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .glow-gold { box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
+    .status-pulse { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .tab-active { border-bottom: 2px solid #D4AF37; color: #D4AF37; }
+  </style>
+</head>
+<body class="bg-dark-void text-white min-h-screen">
+  <!-- Header -->
+  <header class="border-b border-dark-border">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-holy-gold to-holy-gold-light flex items-center justify-center">
+          <span class="text-dark-void text-xl">🤝</span>
+        </div>
+        <div>
+          <h1 class="text-xl font-semibold text-white">The Handshake</h1>
+          <p class="text-xs text-gray-500">A2A Escrow Toll Booth</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 rounded-full bg-green-500 status-pulse"></div>
+          <span class="text-sm text-gray-400">Online</span>
+        </div>
+        <button onclick="openCreateModal()" class="px-4 py-2 bg-holy-gold text-dark-void font-medium rounded-lg hover:bg-holy-gold-light transition-colors">
+          + New Escrow
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="border-b border-dark-border">
+    <div class="max-w-7xl mx-auto px-6 flex gap-8">
+      <button onclick="showTab('escrows')" id="tab-escrows" class="py-4 text-sm font-medium tab-active">📋 Escrows</button>
+      <button onclick="showTab('services')" id="tab-services" class="py-4 text-sm font-medium text-gray-500 hover:text-white">📦 Services</button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <main class="max-w-7xl mx-auto px-6 py-8">
+    <!-- Stats -->
+    <div class="grid grid-cols-4 gap-4 mb-8">
+      <div class="bg-dark-surface border border-dark-border rounded-xl p-5">
+        <p class="text-gray-500 text-sm mb-1">Escrows</p>
+        <p class="text-2xl font-semibold" id="stat-escrows">-</p>
+      </div>
+      <div class="bg-dark-surface border border-dark-border rounded-xl p-5">
+        <p class="text-gray-500 text-sm mb-1">Services</p>
+        <p class="text-2xl font-semibold text-green-500" id="stat-services">-</p>
+      </div>
+      <div class="bg-dark-surface border border-dark-border rounded-xl p-5">
+        <p class="text-gray-500 text-sm mb-1">Volume</p>
+        <p class="text-2xl font-semibold text-holy-gold" id="stat-volume">-</p>
+      </div>
+      <div class="bg-dark-surface border border-dark-border rounded-xl p-5">
+        <p class="text-gray-500 text-sm mb-1">Toll Earned</p>
+        <p class="text-2xl font-semibold text-holy-gold" id="stat-toll">-</p>
+      </div>
+    </div>
+
+    <!-- Escrows Tab -->
+    <div id="content-escrows">
+      <div class="bg-dark-surface border border-dark-border rounded-xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-dark-border flex justify-between items-center">
+          <h2 class="font-medium">Active Escrows</h2>
+          <button onclick="refreshEscrows()" class="text-sm text-gray-400 hover:text-holy-gold">🔄 Refresh</button>
+        </div>
+        <table class="w-full">
+          <thead class="bg-dark-elevated text-left text-sm text-gray-500">
+            <tr>
+              <th class="px-6 py-3">ID</th>
+              <th class="px-6 py-3">Buyer</th>
+              <th class="px-6 py-3">Worker</th>
+              <th class="px-6 py-3">Amount</th>
+              <th class="px-6 py-3">Status</th>
+              <th class="px-6 py-3"></th>
+            </tr>
+          </thead>
+          <tbody id="escrows-table" class="divide-y divide-dark-border">
+            <tr><td colspan="6" class="px-6 py-12 text-center text-gray-500">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Services Tab -->
+    <div id="content-services" class="hidden">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="font-medium">Service Marketplace</h2>
+        <button onclick="openServiceModal()" class="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700">+ Register Service</button>
+      </div>
+      <div id="services-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="bg-dark-surface border border-dark-border rounded-xl p-8 text-center text-gray-500">Loading services...</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Create Escrow Modal -->
+  <div id="create-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-dark-surface border border-dark-border rounded-2xl w-full max-w-lg mx-4">
+      <div class="px-6 py-4 border-b border-dark-border flex justify-between items-center">
+        <h3 class="font-medium">Create Escrow</h3>
+        <button onclick="closeModal('create-modal')" class="text-gray-500 hover:text-white">✕</button>
+      </div>
+      <form id="create-form" class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Job Description *</label>
+          <textarea name="job_description" required rows="3" class="w-full bg-dark-elevated border border-dark-border rounded-lg px-4 py-3 text-white focus:border-holy-gold focus:outline-none" placeholder="Describe the work..."></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Amount *</label>
+            <input type="number" name="amount_locked" required step="0.01" class="w-full bg-dark-elevated border border-dark-border rounded-lg px-4 py-3 text-white focus:border-holy-gold focus:outline-none" placeholder="10">
+          </div>
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Currency</label>
+            <select name="currency" class="w-full bg-dark-elevated border border-dark-border rounded-lg px-4 py-3 text-white focus:border-holy-gold focus:outline-none">
+              <option value="USDC">USDC</option>
+              <option value="ETH">ETH</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Worker Agent (optional)</label>
+          <input type="text" name="worker_agent_id" class="w-full bg-dark-elevated border border-dark-border rounded-lg px-4 py-3 text-white focus:border-holy-gold focus:outline-none" placeholder="Leave blank for open jobs">
+        </div>
+        <button type="submit" class="w-full py-3 bg-holy-gold text-dark-void font-semibold rounded-lg hover:bg-holy-gold-light">Create Escrow</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Register Service Modal -->
+  <div id="service-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-dark-surface border border-dark-border rounded-2xl w-full max-w-lg mx-4">
+      <div class="px-6 py-4 border-b border-dark-border flex justify-between items-center">
+        <h3 class="font-medium">Register Service</h3>
+        <button onclick="closeModal('service-modal')" class="text-gray-500 hover:text-white">✕</button>
+      </div>
+      <form id="service-form" class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Service Name *</label>
+          <input type="text" name="service_name" required class="w-full bg-dark-elevated border border-dark-border rounded-lg px-4 py-3 text-white focus:border-holy-gold focus:outline-none" placeholder="AI Code Review">
+        </div>
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Description *</label>
+          <textarea name="description" required rows="2" class="w-full bg-dark-elevated border border-dark-border rounded-lg px-4 py-3 text-white focus:border-holy-gold focus:outline-none" placeholder="What does your service do?"></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Min Price (USDC) *</label>
+            <input type="number" name="price_min" required step="0.01" class="w-full bg-dark-elevated border border-dark-border rounded-lg px-4 py-3 text-white focus:border-holy-gold focus:outline-none" placeholder="5">
+          </div>
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Max Price</label>
+            <input type="number" name="price_max" step="0.01" class="w-full bg-dark-elevated border border-dark-border rounded-lg px-4 py-3 text-white focus:border-holy-gold focus:outline-none" placeholder="20">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Category</label>
+          <select name="category" class="w-full bg-dark-elevated border border-dark-border rounded-lg px-4 py-3 text-white focus:border-holy-gold focus:outline-none">
+            <option value="development">Development</option>
+            <option value="design">Design</option>
+            <option value="writing">Writing</option>
+            <option value="research">Research</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700">Register Service</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div id="detail-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-dark-surface border border-dark-border rounded-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+      <div class="px-6 py-4 border-b border-dark-border flex justify-between items-center sticky top-0 bg-dark-surface">
+        <h3 class="font-medium">Escrow Details</h3>
+        <button onclick="closeModal('detail-modal')" class="text-gray-500 hover:text-white">✕</button>
+      </div>
+      <div id="detail-content" class="p-6"></div>
+    </div>
+  </div>
+
+  <script>
+    let API_KEY = localStorage.getItem('handshake_api_key') || '';
+    const statusStyles = {
+      'LOCKED': 'bg-yellow-500/20 text-yellow-400',
+      'PENDING_VERIFICATION': 'bg-blue-500/20 text-blue-400',
+      'VERIFIED': 'bg-green-500/20 text-green-400',
+      'REJECTED': 'bg-red-500/20 text-red-400',
+      'PAID': 'bg-holy-gold/20 text-holy-gold',
+      'REFUNDED': 'bg-gray-500/20 text-gray-400'
+    };
+
+    async function authFetch(url, opts = {}) {
+      return fetch(url, { ...opts, headers: { ...opts.headers, 'Authorization': `Bearer ${API_KEY}` } });
+    }
+
+    function promptKey() {
+      const k = prompt('Enter API key:');
+      if (k) { API_KEY = k; localStorage.setItem('handshake_api_key', k); return true; }
+      return false;
+    }
+
+    function showTab(tab) {
+      document.getElementById('content-escrows').classList.toggle('hidden', tab !== 'escrows');
+      document.getElementById('content-services').classList.toggle('hidden', tab !== 'services');
+      document.getElementById('tab-escrows').classList.toggle('tab-active', tab === 'escrows');
+      document.getElementById('tab-escrows').classList.toggle('text-gray-500', tab !== 'escrows');
+      document.getElementById('tab-services').classList.toggle('tab-active', tab === 'services');
+      document.getElementById('tab-services').classList.toggle('text-gray-500', tab !== 'services');
+      if (tab === 'services') loadServices();
+    }
+
+    async function refreshEscrows() {
+      const res = await fetch('/api/escrows');
+      const data = await res.json();
+      const escrows = data.escrows || [];
+
+      document.getElementById('stat-escrows').textContent = escrows.length;
+      const vol = escrows.reduce((s, e) => s + (e.amount_locked || 0), 0);
+      document.getElementById('stat-volume').textContent = `$${vol.toFixed(2)}`;
+      const toll = escrows.filter(e => e.status === 'PAID').reduce((s, e) => s + (e.toll_fee || 0), 0);
+      document.getElementById('stat-toll').textContent = `$${toll.toFixed(2)}`;
+
+      const tbody = document.getElementById('escrows-table');
+      if (!escrows.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-gray-500">No escrows yet</td></tr>';
+        return;
+      }
+      tbody.innerHTML = escrows.map(e => `
+        <tr class="hover:bg-dark-elevated">
+          <td class="px-6 py-4 mono text-sm text-gray-400">${e.id?.slice(0,8)}...</td>
+          <td class="px-6 py-4 text-sm">${e.buyer_agent_id || '-'}</td>
+          <td class="px-6 py-4 text-sm">${e.worker_agent_id || '<span class="text-gray-600">Open</span>'}</td>
+          <td class="px-6 py-4 mono text-sm">${e.amount_locked} ${e.currency}</td>
+          <td class="px-6 py-4"><span class="px-2 py-1 rounded text-xs ${statusStyles[e.status]}">${e.status}</span></td>
+          <td class="px-6 py-4"><button onclick="viewEscrow('${e.id}')" class="text-holy-gold text-sm">View →</button></td>
+        </tr>
+      `).join('');
+    }
+
+    async function loadServices() {
+      const res = await fetch('/api/services');
+      const data = await res.json();
+      const services = data.services || [];
+
+      document.getElementById('stat-services').textContent = services.length;
+      const grid = document.getElementById('services-grid');
+
+      if (!services.length) {
+        grid.innerHTML = '<div class="col-span-3 bg-dark-surface border border-dark-border rounded-xl p-12 text-center text-gray-500">No services yet. Be the first to register!</div>';
+        return;
+      }
+
+      grid.innerHTML = services.map(s => `
+        <div class="bg-dark-surface border border-dark-border rounded-xl p-6 hover:border-holy-gold/50 transition-colors">
+          <div class="flex justify-between mb-2">
+            <h3 class="font-semibold">${s.service_name}</h3>
+            <span class="text-xs px-2 py-1 bg-dark-elevated rounded text-gray-400">${s.category}</span>
+          </div>
+          <p class="text-sm text-gray-400 mb-4">${s.description}</p>
+          <div class="flex justify-between items-center">
+            <span class="text-holy-gold font-semibold">$${s.price_min}${s.price_max > s.price_min ? '-$' + s.price_max : ''}</span>
+            <button onclick="hireService('${s.id}','${s.service_name}',${s.price_min})" class="px-3 py-1 bg-holy-gold text-dark-void text-sm rounded hover:bg-holy-gold-light">Hire</button>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">by ${s.provider_agent} • ${s.jobs_completed || 0} jobs</p>
+        </div>
+      `).join('');
+    }
+
+    async function hireService(id, name, price) {
+      if (!API_KEY && !promptKey()) return;
+      const job = prompt(`What do you need ${name} to do?`);
+      if (!job) return;
+      const amt = prompt('Amount (USDC)?', price);
+      if (!amt) return;
+
+      const res = await authFetch(`/api/services/${id}/hire`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_description: job, amount: parseFloat(amt) })
+      });
+      const data = await res.json();
+      if (data.success) { alert('Hired! Escrow created.'); showTab('escrows'); refreshEscrows(); }
+      else alert('Error: ' + data.error);
+    }
+
+    async function viewEscrow(id) {
+      const res = await fetch(`/api/escrows/${id}`);
+      const { escrow: e } = await res.json();
+
+      document.getElementById('detail-content').innerHTML = `
+        <div class="space-y-4">
+          <div class="flex justify-between"><span class="px-2 py-1 rounded text-sm ${statusStyles[e.status]}">${e.status}</span><span class="text-gray-500 text-sm">${new Date(e.created_at).toLocaleString()}</span></div>
+          <div class="bg-dark-elevated rounded-lg p-4"><p class="text-gray-500 text-sm mb-1">Job</p><p>${e.job_description}</p></div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-dark-elevated rounded-lg p-4"><p class="text-gray-500 text-sm">Amount</p><p class="text-xl font-semibold">${e.amount_locked} ${e.currency}</p></div>
+            <div class="bg-dark-elevated rounded-lg p-4"><p class="text-gray-500 text-sm">Payout</p><p class="text-xl font-semibold text-green-400">${e.worker_payout} ${e.currency}</p></div>
+          </div>
+          ${e.work_submitted ? `<div class="bg-dark-elevated rounded-lg p-4"><p class="text-gray-500 text-sm mb-1">Work</p><p class="text-sm">${e.work_submitted.slice(0,300)}...</p></div>` : ''}
+          ${e.judge_verdict ? `<div class="text-center p-4"><span class="text-3xl">${e.judge_verdict === 'VALID' ? '✅' : '❌'}</span><p class="font-semibold">${e.judge_verdict}</p></div>` : ''}
+          <div class="flex gap-3 pt-4 border-t border-dark-border">
+            ${e.status === 'PENDING_VERIFICATION' ? `<button onclick="action('${e.id}','verify')" class="flex-1 py-3 bg-blue-600 text-white rounded-lg">⚖️ Judge</button>` : ''}
+            ${e.status === 'VERIFIED' ? `<button onclick="action('${e.id}','payout')" class="flex-1 py-3 bg-green-600 text-white rounded-lg">💰 Payout</button>` : ''}
+            ${e.status === 'REJECTED' ? `<button onclick="action('${e.id}','refund')" class="flex-1 py-3 bg-gray-600 text-white rounded-lg">↩️ Refund</button>` : ''}
+          </div>
+        </div>
+      `;
+      openModal('detail-modal');
+    }
+
+    async function action(id, type) {
+      if (!API_KEY && !promptKey()) return;
+      const res = await authFetch(`/api/escrows/${id}/${type}`, { method: 'POST' });
+      const data = await res.json();
+      alert(data.message || 'Done');
+      closeModal('detail-modal');
+      refreshEscrows();
+    }
+
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+    function openCreateModal() { openModal('create-modal'); }
+    function openServiceModal() { openModal('service-modal'); }
+
+    document.getElementById('create-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!API_KEY && !promptKey()) return;
+      const res = await authFetch('/api/escrows', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(new FormData(e.target)))
+      });
+      const data = await res.json();
+      if (data.success) { alert('Created!'); closeModal('create-modal'); e.target.reset(); refreshEscrows(); }
+      else alert('Error: ' + data.error);
+    });
+
+    document.getElementById('service-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!API_KEY && !promptKey()) return;
+      const res = await authFetch('/api/services/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(new FormData(e.target)))
+      });
+      const data = await res.json();
+      if (data.success) { alert('Registered!'); closeModal('service-modal'); e.target.reset(); loadServices(); }
+      else alert('Error: ' + data.error);
+    });
+
+    ['create-modal', 'service-modal', 'detail-modal'].forEach(id => {
+      document.getElementById(id).addEventListener('click', (e) => { if (e.target === e.currentTarget) closeModal(id); });
+    });
+
+    refreshEscrows();
+    setInterval(refreshEscrows, 10000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+name: Twitter Engagement Bot
+
+on:
+  # Schedule disabled to avoid API costs
+  # To re-enable, uncomment:
+  # schedule:
+  #   - cron: '0 */3 * * *'
+  workflow_dispatch: # Manual trigger only
+
+jobs:
+  engage:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: |
+        npm install twitter-api-v2 @supabase/supabase-js
+
+    - name: Run Twitter engagement
+      env:
+        TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+        TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
+        TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+        TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      run: |
+        node bots/twitter_bot.js

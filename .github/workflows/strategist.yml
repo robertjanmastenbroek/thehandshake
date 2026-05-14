@@ -1,0 +1,35 @@
+name: Strategist Agent
+
+on:
+  # Schedule disabled to avoid API costs
+  # To re-enable, uncomment:
+  # schedule:
+  #   - cron: '0 6 * * *'
+  workflow_dispatch: # Manual trigger only
+
+jobs:
+  strategist:
+    runs-on: ubuntu-latest
+    name: Strategic Planning
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run Strategist Agent
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        HANDSHAKE_API_URL: https://thehandshake.io
+      run: |
+        echo "🧠 Strategist Agent starting daily planning cycle..."
+        node agents/strategist_agent.js
+        echo "✓ Strategy cycle complete"

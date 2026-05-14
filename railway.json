@@ -6,17 +6,13 @@
   },
   "deploy": {
     "startCommand": "uvicorn app.main:app --host 0.0.0.0 --port $PORT",
+    "healthcheckPath": "/health",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   },
   "watchers": [
-    {
-      "pattern": "app/**/*.py",
-      "command": "uvicorn app.main:app --host 0.0.0.0 --port $PORT --reload"
-    },
-    {
-      "pattern": "app/templates/**/*.html",
-      "command": "uvicorn app.main:app --host 0.0.0.0 --port $PORT --reload"
-    }
+    "app/**/*.py",
+    "app/**/*.html",
+    "app/static/**/*"
   ]
 }

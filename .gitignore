@@ -1,4 +1,4 @@
-# Python
+# ── Python (FastAPI) ─────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
@@ -16,23 +16,6 @@ venv/
 env/
 ENV/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-
-# Logs
-*.log
-logs/
-
-# Environment & secrets
-.env
-.env.local
-.env.production
-
 # Database (local)
 *.db
 *.sqlite3
@@ -49,16 +32,45 @@ alembic/versions/*.py
 # Static files generated at build
 app/static/dist/
 
-# OS files
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# Railway deployment artifacts
-.railway/
-
 # Uploads
 uploads/
 
 # Config overrides
 *.local.py
+
+# ── Node.js (escrow system) ──────────────────────────────────────────────────
+node_modules/
+
+# ── Shared ───────────────────────────────────────────────────────────────────
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+build/
+
+# Misc
+*.pem
+
+# Railway deployment artifacts
+.railway/
